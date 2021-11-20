@@ -1,0 +1,29 @@
+{
+  "name": "gamily",
+  "version": "1.0.0",
+  "description": "Gamily backend",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.js"
+  },
+  "author": "Heavell",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.1031.0",
+    "axios": "^0.21.1",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "express-mongo-sanitize": "^2.1.0",
+    "helmet": "^4.6.0",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^5.13.3",
+    "multer": "^1.4.3",
+    "multer-s3": "^2.10.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.13",
+    "nodemon": "^2.0.12"
+  }
+}

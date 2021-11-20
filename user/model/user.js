@@ -1,0 +1,20 @@
+const mongoose = require('mongoose');
+
+const PUserSchema = new mongoose.Schema({
+    username: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    id: { type: String, required: true, unique: true },
+    created: { type: Date, required: true, },
+    email: { type: String, required: false, unique: true },
+    phone: { type: String, required: true, unique: true },
+    updated: { type: Date, required: true },
+    is_verified: { type: Boolean, required: true },
+    type: { type: String, required: true },
+    cards_created: {type: Number, required:true}
+},{
+    collection: 'users'
+});
+
+const model = mongoose.model('PUserSchema', PUserSchema);
+
+module.exports = model;
