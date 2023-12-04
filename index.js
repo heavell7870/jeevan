@@ -22,10 +22,10 @@ const app = express();
 app.use(express.json());
 app.use(sanitize());
 
-app.use("/jeevan/api/auth", authApp);
-app.use("/jeevan/api/user", userApp);
-app.use("/jeevan/api/district", districtApp);
-app.use("/jeevan/api/card", CardApp);
+app.use("/api/auth", authApp);
+app.use("/api/user", userApp);
+app.use("/api/district", districtApp);
+app.use("/api/card", CardApp);
 
 app.listen(9999, () => {
   console.log("Server running");
