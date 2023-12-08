@@ -1,133 +1,120 @@
-const express = require('express');
-const authenticateToken = require('../middleware/authenticate');
-const User = require('./model/user');
-const CardSchema = require('../Card/model');
+const express = require("express");
+const authenticateToken = require("../middleware/authenticate");
+const User = require("./model/user");
+const CardSchema = require("../Card/model");
 
 const userApp = express.Router();
 
 userApp.use(express.json());
 
-userApp.get('/profile', authenticateToken, async (req, res) => {
+userApp.get("/profile", authenticateToken, async (req, res) => {
+  const id = req.user.id;
 
-    const id = req.user.id;
+  const val = await User.findOne({ id });
 
-    const val = await User.findOne({ id });
+  delete val.password;
 
-    delete val.password;
+  if (!val) {
+    return res.json({ status: "failed", msg: "No user present" });
+  }
 
-    if (!val) {
-        return res.json({ status: "failed", msg: "No user present" })
-    }
-
-    return res.json({ status: "ok", data: val })
+  return res.json({ status: "ok", data: val });
 });
 
+userApp.post("/edit", authenticateToken, async (req, res) => {
+  const id = req.user?.id;
 
+  const { username, email, phone, password } = req.body;
 
-userApp.post('/edit', authenticateToken, async (req, res) => {
+  if (!id) {
+    return res.json({ status: "failed", msg: "User ID not present." });
+  }
 
+  if (password) {
+    delete req.body.password;
+  }
 
-    const id = req.user?.id;
+  const size = Object.keys(req.body).length;
 
-    const { username, email, phone, password } = req.body;
+  if (size == 0) {
+    return res.json({ status: "failed", msg: "Nothing to update" });
+  }
 
-    if (!id) {
-        return res.json({ status: 'failed', msg: 'User ID not present.' });
-    }
+  if (username && (await User.findOne({ username })) != null) {
+    return res.json({ status: "failed", msg: "Username already exists" });
+  }
 
-    if (password) {
-        delete req.body.password
-    }
+  if (phone && (await User.findOne({ phone })) !== null) {
+    return res.json({ status: "failed", msg: "Mobile number already exists" });
+  }
 
-    const size = Object.keys(req.body).length;
+  if (email && (await User.findOne({ email })) !== null) {
+    return res.json({ status: "failed", msg: "Email already exists" });
+  }
 
-    if (size == 0) {
-        return res.json({ status: 'failed', msg: 'Nothing to update' });
-    }
+  try {
+    await User.updateOne({ id }, { ...req.body });
+  } catch (e) {
+    console.log(e);
+    return res.json({ status: "failed", msg: "Server error" });
+  }
 
-    if (username && await User.findOne({ username }) != null) {
-
-        return res.json({ status: 'failed', msg: 'Username already exists' });
-    };
-
-    if (phone && await User.findOne({ phone }) !== null) {
-
-        return res.json({ status: 'failed', msg: 'Mobile number already exists' });
-    };
-
-    if (email && await User.findOne({ email }) !== null) {
-
-        return res.json({ status: 'failed', msg: 'Email already exists' });
-    };
-
-
-    try {
-
-        await User.updateOne({ id }, { ...req.body });
-
-    } catch (e) {
-        console.log(e)
-        return res.json({ status: "failed", msg: "Server error" })
-    }
-
-    return res.json({ status: "ok", msg: "Successfully updated" })
-
+  return res.json({ status: "ok", msg: "Successfully updated" });
 });
 
+userApp.get("/other/:id", authenticateToken, async (req, res) => {
+  const id = req.params.id;
 
-userApp.get('/other/:id', authenticateToken, async (req, res) => {
+  const val = await User.findOne({ id });
 
-    const id = req.params.id;
+  delete val.password;
 
-    const val = await User.findOne({ id });
+  if (!val) {
+    return res.json({ status: "failed", msg: "No user present" });
+  }
 
-    delete val.password;
-
-    if (!val) {
-        return res.json({ status: "failed", msg: "No user present" })
-    }
-
-    return res.json({ status: "ok", data: val })
+  return res.json({ status: "ok", data: val });
 });
 
-userApp.get('/all/:page', authenticateToken, async (req, res) => {
+userApp.get("/all/:page", authenticateToken, async (req, res) => {
+  const page = req.params.page;
 
-    const page = req.params.page;
+  const val = await User.find({})
+    .limit(50)
+    .skip(page * 50)
+    .sort({ created: -1 });
 
-    const val = await User.find({}).limit(50).skip(page * 50).sort({ created: -1 })
+  if (!val) {
+    return res.json({ status: "failed", msg: "No user present" });
+  }
 
-    if (!val) {
-        return res.json({ status: "failed", msg: "No user present" })
-    }
-
-    return res.json({ status: "ok", data: val })
+  return res.json({ status: "ok", data: val });
 });
 
+userApp.get("/search/:text", authenticateToken, async (req, res) => {
+  const text = req.params.text;
 
-userApp.get('/search/:text', authenticateToken, async (req, res) => {
+  const val = await User.find({ username: new RegExp(text, "i") }).sort({
+    created: -1,
+  });
 
-    const text = req.params.text;
+  if (!val) {
+    return res.json({ status: "failed", msg: "No user present" });
+  }
 
-    const val = await User.find({ username: new RegExp(text, 'i') }).sort({ created: -1 })
-
-    if (!val) {
-        return res.json({ status: "failed", msg: "No user present" })
-    }
-
-    return res.json({ status: "ok", data: val })
+  return res.json({ status: "ok", data: val });
 });
 
-userApp.get('/card/:id', authenticateToken, async (req, res) => {
-    const id = req.params.id
+userApp.get("/card/:id", authenticateToken, async (req, res) => {
+  const id = req.user.id;
 
-    try {
-        const data = await CardSchema.find({ created_by: id })
-        return res.send({ status: "ok", data })
-    } catch (e) {
-        console.log(e)
-        return res.send({ status: 'Failed', msg: "Server error" })
-    }
-})
-
+  try {
+    const data = await CardSchema.find({ created_by: id });
+    return res.send({ status: "ok", data });
+  } catch (e) {
+    console.log(e);
+    return res.send({ status: "Failed", msg: "Server error" });
+  }
+});
 
 module.exports = userApp;
